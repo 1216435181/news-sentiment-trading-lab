@@ -1,0 +1,3 @@
+﻿strategy,total_return,annual_return,annual_vol,sharpe,max_drawdown,max_dd_date,calmar,n_days,win_rate_daily,best_day,worst_day,final_equity,trades,exposure,excess_annual_return
+情感策略(Sentiment L/S),0.0174,0.0106,0.1579,0.146,-0.2046,404,0.052,415,0.4241,0.0349,-0.0705,1.0174,31,0.7928,-0.0092
+基准(Buy & Hold),0.0329,0.0198,0.1695,0.201,-0.2123,404,0.093,415,0.5253,0.0349,-0.0705,1.0329,1,1.0,0.0

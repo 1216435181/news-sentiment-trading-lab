@@ -1,0 +1,23 @@
+{
+  "raw_rows": 2495,
+  "drop_bad_time": 0,
+  "drop_empty": 0,
+  "drop_short_or_garbled": 1,
+  "drop_dup_title_time": 363,
+  "drop_dup_title": 19,
+  "drop_future_time": 0,
+  "drop_non_trading_day": 220,
+  "clean_rows": 1892,
+  "drop_total": 603,
+  "keep_rate": 0.7583,
+  "title_len_mean": 26.11,
+  "content_len_mean": 61.06,
+  "time_start": "2025-03-20 06:00:00",
+  "time_end": "2026-11-13 23:55:00",
+  "n_days": 400,
+  "by_source": {
+    "eastmoney_cjzc": 1188,
+    "eastmoney_stock_news": 648,
+    "eastmoney_global": 56
+  }
+}

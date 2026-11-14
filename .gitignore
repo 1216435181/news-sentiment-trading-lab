@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# 原始数据不随仓库分发(版权归数据提供方), 可用脚本重新抓取
+# 清洗后的数据与 SQLite 已提交, 便于离线核对与直接演示
+data/raw/*.csv
+
+# 运行日志
+logs/*.log
+
+# 临时预览
+reports/_preview.png
