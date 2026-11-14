@@ -48,15 +48,32 @@ def main(skip_fetch: bool = False) -> None:
 
     # 1) 采集
     if skip_fetch:
-        raw_news = pd.read_csv(P.raw_news, encoding="utf-8-sig")
-        raw_price = pd.read_csv(P.raw_price, encoding="utf-8-sig")
-        log.info("跳过采集, 复用原始数据: %d 条新闻 / %d 行行情", len(raw_news), len(raw_price))
+        if P.raw_news.exists() and P.raw_price.exists():
+            log.info("跳过采集, 复用 data/raw 下的原始数据")
+            raw_news = pd.read_csv(P.raw_news, encoding="utf-8-sig")
+            raw_price = pd.read_csv(P.raw_price, encoding="utf-8-sig")
+            log.info("原始数据: %d 条新闻 / %d 行行情", len(raw_news), len(raw_price))
+        elif P.clean_news.exists() and P.clean_price.exists():
+            # 全新克隆的场景: data/raw 因版权原因未随仓库分发, 直接复用已提交的清洗结果
+            log.info("data/raw 不存在, 复用已提交的清洗数据 %s", P.clean_news.name)
+            news = pd.read_csv(P.clean_news, encoding="utf-8-sig",
+                               parse_dates=["pub_time", "trade_date"])
+            price = pd.read_csv(P.clean_price, encoding="utf-8-sig",
+                                parse_dates=["trade_date"])
+            funnel = json.loads(P.clean_log.read_text(encoding="utf-8"))
+            log.info("复用清洗结果: %d 条新闻 / %d 行行情 (原始留存率 %.1f%%)",
+                     len(news), len(price), funnel.get("keep_rate", 0) * 100)
+        else:
+            raise FileNotFoundError(
+                "data/raw 与 data/processed 均不存在; 请去掉 --skip-fetch 重新联网采集"
+            )
     else:
         raw_news = step("data_fetch_news", fetcher.fetch_news)
         raw_price = step("data_fetch_price", fetcher.fetch_price)
 
-    # 2) 清洗
-    news, price, funnel = step("data_clean", cleaner.run)
+    # 2) 清洗(仅在重新采集时需要; 复用清洗结果的分支已跳过)
+    if not skip_fetch or P.raw_news.exists():
+        news, price, funnel = step("data_clean", cleaner.run)
 
     # 3) 弱标注
     labeled = step("weak_label", label_news, news)

@@ -17,12 +17,13 @@ FastAPI(接口) + Streamlit(4 个页面) + 图表 + Markdown/PDF 报告
 
 | 类别 | 模型 | Macro-F1 | Accuracy | 单条延迟(ms) | 训练(s) | 稳定性(重复一致率) |
 |---|---|---|---|---|---|---|
-| ML | TF-IDF + LinearSVC | **0.7605** | **0.8127** | 0.318 | 0.33 | 1.00 |
-| ML | TF-IDF + LogisticRegression | 0.7460 | 0.7942 | 0.325 | 0.48 | 1.00 |
-| ML | TF-IDF + SVD + MLP | 0.6711 | 0.7361 | 0.406 | 1.14 | 1.00 |
-| ML | TF-IDF + ComplementNB | 0.5821 | 0.6148 | 0.321 | 0.31 | 1.00 |
-| LLM | 本地可复现模拟 LLM(温度可控) | 0.6888 | 0.7600 | 0.457 | — | **0.76** |
+| ML | TF-IDF + LinearSVC | **0.7605** | **0.8127** | 0.317 | 0.33 | 1.00 |
+| ML | TF-IDF + LogisticRegression | 0.7460 | 0.7942 | 0.317 | 0.48 | 1.00 |
+| ML | TF-IDF + SVD + MLP | 0.6711 | 0.7361 | 0.332 | 1.14 | 1.00 |
+| ML | TF-IDF + ComplementNB | 0.5821 | 0.6148 | 0.323 | 0.31 | 1.00 |
+| LLM | 本地可复现模拟 LLM(温度可控) | 0.6888 | 0.7600 | 0.391 | — | **0.76** |
 
+- 准确率类指标由固定随机种子保证可复现; 单条延迟随机器与负载浮动, 上表为本次运行结果。
 - LLM 稳定性测试: 同批 50 条样本 `temperature=0` vs `0.7` 各跑一次,
   **signal 一致率 76.0%**, 情感分平均绝对偏差 **0.1248**(最大 0.2899)。
 - ML 推理比 LLM 快、且完全确定; LLM 优势在语义泛化, 代价是采样不确定性。
@@ -89,28 +90,47 @@ FastAPI(接口) + Streamlit(4 个页面) + 图表 + Markdown/PDF 报告
 
 ## 快速开始
 
+> 环境: Python 3.11+。装依赖时国内建议加清华镜像, 直连 PyPI 容易卡住。
+
+### 路线 A · 只想看结果(最快, 不用跑流水线)
+
 ```bash
-# 1) 环境(Python 3.11+; 国内建议加清华镜像)
 python -m venv .venv
-.venv\Scripts\activate            # Windows
+.venv\Scripts\activate                     # Windows; macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 2) 跑完整实验(采集 100 只个股 + 财经早餐 + 快讯 + 指数, 约 60s)
-python -m scripts.run_pipeline
+uvicorn src.api.main:app --port 8000       # 后端: /docs  /monitor
+streamlit run src/app/streamlit_app.py     # 前端: 4 个页面
+```
 
-#    已有原始数据时跳过采集(约 6s)
+仓库已提交 `data/db/market.db`、`data/processed/*.csv` 与全部图表, **克隆下来直接启动就有数据**,
+不需要先跑流水线。
+
+### 路线 B · 离线复现全部结果(约 20 秒, 推荐答辩前跑一次)
+
+```bash
 python -m scripts.run_pipeline --skip-fetch
+```
 
-# 3) 后端
-uvicorn src.api.main:app --port 8000        # 文档 http://127.0.0.1:8000/docs
-#                                            运维页 http://127.0.0.1:8000/monitor
+- 若 `data/raw/` 存在 → 复用原始数据重新清洗(精确复现清洗漏斗);
+- 若是全新克隆(`data/raw/` 因版权未入库) → **自动回退**到已提交的 `data/processed/` 清洗结果,
+  从弱标注开始跑完全流程, 数值与报告完全一致(已实测: 年化 1.06%、夏普 0.146、31 笔交易逐位相同)。
 
-# 4) 前端(4 个页面)
-streamlit run src/app/streamlit_app.py
+### 路线 C · 从零联网采集(约 60 秒)
 
-# 5) 报告与截图
-python -m scripts.make_report_pdf
-python -m scripts.screenshots       # 需 pip install playwright(复用本机 Edge, 不下载内核)
+```bash
+python -m scripts.run_pipeline
+```
+
+会实时抓取 100+ 只个股新闻、财经早餐长历史、全球快讯与沪深300 日线;
+因数据源每日更新, **数值会与报告略有差异**, 属正常现象。
+
+### 报告与截图
+
+```bash
+python -m scripts.make_report_pdf          # Markdown -> HTML -> PDF(需 playwright)
+python -m scripts.screenshots              # 自动截取 3 个前端页(需 playwright, 复用本机 Edge)
+pip install -r requirements-dev.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 ## 系统实现
